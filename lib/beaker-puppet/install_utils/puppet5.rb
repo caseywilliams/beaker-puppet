@@ -175,6 +175,11 @@ module BeakerPuppet
           if repoconfig_url.nil?
             install_artifact_on( host, artifact_url, project_name )
           else
+            # Allow the use of unsigned repos with Ubuntu 18.04+
+            variant, version, _arch, _codename = host['platform'].to_array
+            if variant =~ /^ubuntu$/ && version.split('.').first.to_i >= 18
+              on host, "echo 'Acquire::AllowInsecureRepositories \"true\";' > /etc/apt/apt.conf.d/90insecure"
+            end
             install_repo_configs_on( host, repoconfig_url )
             host.install_package( project_name )
           end
