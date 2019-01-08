@@ -4,8 +4,10 @@ module Beaker
   module DSL
     module InstallUtils
       module Puppet5
-
         include Beaker::DSL::InstallUtils::FOSSDefaults
+
+        # Base URL for internal Puppet Inc. builds
+        DEFAULT_DEV_BUILDS_URL = 'http://builds.delivery.puppetlabs.net'
 
         # grab build json from the builds server
         #
@@ -205,6 +207,16 @@ module Beaker
           end
         end
 
+        # Install puppet-agent from an internal Puppet development build. This only works inside Puppet's VPN.
+        # @param [Host|Array<Host>] hosts to install the agent on
+        # @param [String] ref to install (this can be a tag or a long SHA)
+        def install_puppet_agent_from_dev_builds_on(hosts, ref)
+          unless dev_builds_accessible_on?(hosts)
+            fail_test("Can't install puppet-agent #{ref}: unable to access Puppet's internal builds")
+          end
+          sha_yaml_url = File.join(DEFAULT_DEV_BUILDS_URL, 'puppet-agent', ref, 'artifacts', "#{ref}.yaml")
+          install_from_build_data_url('puppet-agent', sha_yaml_url, hosts)
+        end
       end
     end
   end
